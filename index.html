@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WatchThat!</title>
-  <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
@@ -24,7 +23,6 @@
       align-items: center;
     }
 
-    /* -------- light theme (default) -------- */
     .light-theme {
       --bg: #f5f7fa;
       --card: #ffffff;
@@ -34,9 +32,10 @@
       --input-bg: #f0f2f6;
       --hover: #eef1f5;
       --soft: #e8ecf2;
+      --slider-bg: #e0e5ed;
+      --slider-fill: #1e1e2a;
     }
 
-    /* -------- dark theme -------- */
     .dark-theme {
       --bg: #181a20;
       --card: #23262e;
@@ -46,6 +45,8 @@
       --input-bg: #2c303a;
       --hover: #2f3340;
       --soft: #2e333e;
+      --slider-bg: #3a3f4a;
+      --slider-fill: #e8edf5;
     }
 
     body {
@@ -53,12 +54,12 @@
       color: var(--text);
     }
 
-    /* -------- auth / account overlay -------- */
+    /* -------- AUTH OVERLAY -------- */
     #authOverlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.3);
-      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -70,7 +71,7 @@
       padding: 2.5rem 2.8rem;
       border-radius: 40px;
       box-shadow: var(--shadow);
-      max-width: 420px;
+      max-width: 440px;
       width: 90%;
       text-align: center;
       border: 1px solid var(--border);
@@ -147,37 +148,87 @@
       border-color: #e8edf5;
     }
 
-    .verify-row {
-      display: flex;
-      gap: 8px;
+    /* SLIDER VERIFICATION */
+    .slider-container {
       margin: 20px 0 12px;
-    }
-    .verify-row input {
-      flex: 1;
-      padding: 14px 16px;
+      position: relative;
+      width: 100%;
+      height: 52px;
+      background: var(--slider-bg);
       border-radius: 60px;
+      overflow: hidden;
       border: 1px solid var(--border);
-      background: var(--input-bg);
-      color: var(--text);
-      font-size: 0.95rem;
-      outline: none;
-    }
-    .verify-row input:focus {
-      border-color: #1e1e2a;
-    }
-    .verify-row button {
-      background: #1e1e2a;
-      color: white;
-      border: none;
-      padding: 0 24px;
-      border-radius: 60px;
-      font-weight: 600;
       cursor: pointer;
-      white-space: nowrap;
+      user-select: none;
     }
-    .dark-theme .verify-row button {
-      background: #e8edf5;
-      color: #1e1e2a;
+    .slider-track {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-size: 0.9rem;
+      color: var(--text);
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .slider-thumb {
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 44px;
+      height: 44px;
+      background: var(--card);
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      transition: box-shadow 0.2s;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 1.2rem;
+    }
+    .slider-thumb:active {
+      cursor: grabbing;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .slider-thumb.dragging {
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+    .slider-thumb.success {
+      background: #2b7a4b;
+      color: white;
+      border-color: #2b7a4b;
+    }
+    .slider-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: var(--slider-fill);
+      opacity: 0.15;
+      border-radius: 60px;
+      width: 0%;
+      pointer-events: none;
+      transition: width 0.05s;
+    }
+    .slider-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      pointer-events: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--text);
+      opacity: 0.7;
+      z-index: 2;
+    }
+    .slider-text.success-text {
+      opacity: 1;
+      color: #2b7a4b;
     }
     .verify-status {
       font-size: 0.85rem;
@@ -211,7 +262,7 @@
       opacity: 0.85;
     }
 
-    /* -------- main app (hidden until auth) -------- */
+    /* -------- MAIN APP -------- */
     #mainApp {
       display: none;
       width: 100%;
@@ -291,7 +342,6 @@
       transform: scale(0.97);
     }
 
-    /* video container */
     .video-wrapper {
       background: var(--input-bg);
       border-radius: 32px;
@@ -304,11 +354,18 @@
       border: 1px solid var(--border);
       margin-bottom: 1.2rem;
     }
+    .video-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+    }
     .video-wrapper video {
       width: 100%;
       height: 100%;
       display: block;
       background: #0b0b0f;
+      display: none;
     }
     .video-wrapper .placeholder {
       color: var(--text);
@@ -380,7 +437,6 @@
       transform: scale(1.02);
     }
 
-    /* settings panel */
     .settings-panel {
       position: fixed;
       bottom: 90px;
@@ -422,6 +478,19 @@
       text-align: right;
     }
 
+    .loader {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid var(--border);
+      border-radius: 50%;
+      border-top-color: var(--text);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     @media (max-width: 640px) {
       #mainApp { padding: 1.5rem; }
       .auth-card { padding: 1.8rem; }
@@ -441,12 +510,16 @@
 
     <div id="usernameSelection" style="display: none;">
       <div class="username-grid" id="usernameGrid"></div>
-      <div style="font-size:0.85rem; margin: 6px 0 4px; opacity:0.7;">pick one</div>
+      <div style="font-size:0.85rem; margin: 6px 0 4px; opacity:0.7;">pick a username</div>
     </div>
 
-    <div class="verify-row">
-      <input type="text" id="verifyInput" placeholder="verification code" disabled>
-      <button id="verifyBtn" disabled>Verify</button>
+    <!-- SLIDER VERIFICATION -->
+    <div class="slider-container" id="sliderContainer">
+      <div class="slider-fill" id="sliderFill"></div>
+      <div class="slider-text" id="sliderText">▶ drag to verify</div>
+      <div class="slider-thumb" id="sliderThumb">
+        <i class="fas fa-arrow-right"></i>
+      </div>
     </div>
     <div class="verify-status" id="verifyStatus"></div>
 
@@ -467,7 +540,8 @@
   </div>
 
   <div class="video-wrapper" id="videoWrapper">
-    <video id="videoPlayer" controls style="display: none;"></video>
+    <iframe id="videoIframe" allowfullscreen></iframe>
+    <video id="videoPlayer" controls></video>
     <div class="placeholder" id="videoPlaceholder">
       <i class="fas fa-film" style="font-size:2.4rem; display:block; margin-bottom:10px;"></i>
       paste a YouTube link & click Watch
@@ -486,7 +560,7 @@
   <div class="footer-meta">WatchThat · no ads, pure video</div>
 </div>
 
-<!-- ===== SETTINGS (bottom right) ===== -->
+<!-- ===== SETTINGS ===== -->
 <div class="settings-corner">
   <button id="settingsToggle"><i class="fas fa-cog"></i> Settings</button>
 </div>
@@ -502,7 +576,7 @@
 
 <script>
   (function() {
-    // ---------- state ----------
+    // ---------- STATE ----------
     let currentUsername = '';
     let selectedUsername = '';
     let isVerified = false;
@@ -515,14 +589,19 @@
     const createAccountBtn = document.getElementById('createAccountBtn');
     const usernameSelection = document.getElementById('usernameSelection');
     const usernameGrid = document.getElementById('usernameGrid');
-    const verifyInput = document.getElementById('verifyInput');
-    const verifyBtn = document.getElementById('verifyBtn');
     const verifyStatus = document.getElementById('verifyStatus');
     const enterAppBtn = document.getElementById('enterAppBtn');
     const displayUsername = document.getElementById('displayUsername');
 
+    // Slider elements
+    const sliderContainer = document.getElementById('sliderContainer');
+    const sliderThumb = document.getElementById('sliderThumb');
+    const sliderFill = document.getElementById('sliderFill');
+    const sliderText = document.getElementById('sliderText');
+
     const youtubeLinkInput = document.getElementById('youtubeLinkInput');
     const loadVideoBtn = document.getElementById('loadVideoBtn');
+    const videoIframe = document.getElementById('videoIframe');
     const videoPlayer = document.getElementById('videoPlayer');
     const videoPlaceholder = document.getElementById('videoPlaceholder');
     const videoStatus = document.getElementById('videoStatus');
@@ -536,7 +615,7 @@
     const autoplayToggle = document.getElementById('autoplayToggle');
     const loopToggle = document.getElementById('loopToggle');
 
-    // ---------- helpers ----------
+    // ---------- HELPERS ----------
     function generateRandomString(len = 10) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let result = '';
@@ -554,7 +633,6 @@
       return arr;
     }
 
-    // render username options
     function renderUsernames() {
       const names = getRandomUsernames(4);
       usernameGrid.innerHTML = '';
@@ -563,93 +641,123 @@
         div.className = 'username-option';
         div.textContent = name;
         div.dataset.name = name;
-        div.addEventListener('click', function(e) {
+        div.addEventListener('click', function() {
           document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
           this.classList.add('selected');
           selectedUsername = this.dataset.name;
-          verifyInput.disabled = false;
-          verifyBtn.disabled = false;
-          verifyInput.value = '';
-          verifyStatus.textContent = '';
-          isVerified = false;
-          enterAppBtn.classList.remove('active');
+          checkVerification();
         });
         usernameGrid.appendChild(div);
       });
     }
 
-    // verification mock (any 4 digits)
-    function verifyCode(code) {
-      return /^\d{4}$/.test(code);
-    }
+    // ---------- SLIDER VERIFICATION ----------
+    let isDragging = false;
 
-    // reset auth flow
-    function resetAuthFlow() {
-      selectedUsername = '';
-      isVerified = false;
-      verifyInput.disabled = true;
-      verifyBtn.disabled = true;
-      verifyInput.value = '';
-      verifyStatus.textContent = '';
-      enterAppBtn.classList.remove('active');
-      document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
-      usernameSelection.style.display = 'none';
-    }
+    function initSlider() {
+      const containerWidth = sliderContainer.offsetWidth - 48;
 
-    // ---------- load video from YouTube (fetch + blob) ----------
-    async function loadYouTubeVideo(url) {
-      try {
-        // try to extract video ID
-        const videoId = extractVideoId(url);
-        if (!videoId) {
-          videoStatus.textContent = '❌ invalid YouTube link';
-          return;
-        }
-
-        // Use a public proxy / download endpoint (we fetch the video as blob)
-        // Using a simple no-cors approach won't work; we use a public proxy that returns video.
-        // For demo: we use a known public proxy (invidious / yt-dlp style)
-        // Actually we can't directly fetch from youtube due to CORS, but we can use a free proxy.
-        // Using 'https://www.youtube.com/watch?v=' + videoId + '&format=mp4' won't work directly.
-        // We'll use a community proxy: 'https://api.vevioz.com/api/button/mp3/' but for video we use 'https://api.vevioz.com/api/button/mp4/'
-        // Better: use 'https://www.yt-download.org/api/button/mp4/' but many are unstable.
-        // For demonstration we use a working public proxy (no ads, just video).
-        // We'll use 'https://api.vevioz.com/api/button/mp4/' (returns mp4)
-        // This is just for demonstration – in real world you'd need a backend.
-        const proxyUrl = `https://api.vevioz.com/api/button/mp4/${videoId}`;
-        
-        videoStatus.textContent = '⏳ fetching video ...';
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error('proxy fetch failed');
-        const blob = await response.blob();
-        if (blob.size < 1000) throw new Error('video too small');
-
-        // revoke old blob
-        if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
-        videoBlobUrl = URL.createObjectURL(blob);
-        videoPlayer.src = videoBlobUrl;
-        videoPlayer.style.display = 'block';
-        videoPlaceholder.style.display = 'none';
-        currentVideoUrl = url;
-        videoStatus.textContent = `✅ loaded (${(blob.size / 1024 / 1024).toFixed(1)} MB)`;
-
-        if (autoplayToggle.checked) {
-          videoPlayer.play().catch(() => {});
-        }
-        if (loopToggle.checked) {
-          videoPlayer.loop = true;
-        } else {
-          videoPlayer.loop = false;
-        }
-
-      } catch (err) {
-        console.warn(err);
-        videoStatus.textContent = '⚠️ failed to fetch (proxy error)';
-        // fallback: show a placeholder
-        videoPlayer.style.display = 'none';
-        videoPlaceholder.style.display = 'flex';
-        videoPlaceholder.innerHTML = `<i class="fas fa-exclamation-triangle" style="font-size:2rem; display:block;"></i> could not load video<br><span style="font-size:0.8rem;">try another link</span>`;
+      function updateSlider(clientX) {
+        const rect = sliderContainer.getBoundingClientRect();
+        let x = clientX - rect.left - 22;
+        x = Math.max(4, Math.min(x, containerWidth));
+        const progress = x / containerWidth;
+        sliderThumb.style.left = x + 'px';
+        sliderFill.style.width = (progress * 100) + '%';
+        return progress;
       }
+
+      function onStart(e) {
+        if (isVerified) return;
+        e.preventDefault();
+        const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+        isDragging = true;
+        sliderThumb.classList.add('dragging');
+        sliderText.textContent = '▶ drag to verify';
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+      }
+
+      function onMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+        const progress = updateSlider(clientX);
+        if (progress > 0.95) {
+          completeVerification();
+        }
+      }
+
+      function onEnd(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        sliderThumb.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+
+        const thumbLeft = parseFloat(sliderThumb.style.left) || 4;
+        const progress = thumbLeft / (sliderContainer.offsetWidth - 48);
+        if (progress > 0.9) {
+          completeVerification();
+        } else {
+          sliderThumb.style.left = '4px';
+          sliderFill.style.width = '0%';
+          sliderText.textContent = '▶ drag to verify';
+          sliderText.className = 'slider-text';
+          sliderThumb.className = 'slider-thumb';
+          sliderThumb.innerHTML = '<i class="fas fa-arrow-right"></i>';
+        }
+      }
+
+      function completeVerification() {
+        if (isVerified) return;
+        isVerified = true;
+        sliderThumb.style.left = (sliderContainer.offsetWidth - 48) + 'px';
+        sliderFill.style.width = '100%';
+        sliderText.textContent = '✅ Verified!';
+        sliderText.className = 'slider-text success-text';
+        sliderThumb.className = 'slider-thumb success';
+        sliderThumb.innerHTML = '<i class="fas fa-check"></i>';
+        verifyStatus.textContent = '✅ verification complete!';
+        verifyStatus.className = 'verify-status success';
+        checkVerification();
+      }
+
+      sliderContainer.addEventListener('mousedown', onStart);
+      sliderContainer.addEventListener('touchstart', onStart, { passive: false });
+    }
+
+    function resetSlider() {
+      isVerified = false;
+      sliderThumb.style.left = '4px';
+      sliderFill.style.width = '0%';
+      sliderText.textContent = '▶ drag to verify';
+      sliderText.className = 'slider-text';
+      sliderThumb.className = 'slider-thumb';
+      sliderThumb.innerHTML = '<i class="fas fa-arrow-right"></i>';
+      verifyStatus.textContent = '';
+      verifyStatus.className = 'verify-status';
+      enterAppBtn.classList.remove('active');
+    }
+
+    function checkVerification() {
+      if (isVerified && selectedUsername) {
+        enterAppBtn.classList.add('active');
+      } else {
+        enterAppBtn.classList.remove('active');
+      }
+    }
+
+    // ---------- CONVERT YOUTUBE LINK TO yout-ube.com ----------
+    function convertToProxyLink(url) {
+      const videoId = extractVideoId(url);
+      if (!videoId) return null;
+      // Use yout-ube.com as the proxy (working YouTube mirror)
+      return `https://yout-ube.com/watch?v=${videoId}`;
     }
 
     function extractVideoId(url) {
@@ -658,13 +766,90 @@
       return match ? match[1] : null;
     }
 
-    // ---------- share (custom link) ----------
+    // ---------- LOAD VIDEO USING PROXY ----------
+    function loadYouTubeVideo(url) {
+      try {
+        const videoId = extractVideoId(url);
+        if (!videoId) {
+          videoStatus.textContent = '❌ invalid YouTube link';
+          return;
+        }
+
+        // Convert to yout-ube.com proxy
+        const proxyUrl = convertToProxyLink(url);
+        if (!proxyUrl) {
+          videoStatus.textContent = '❌ Could not convert link';
+          return;
+        }
+
+        videoStatus.textContent = '⏳ loading video...';
+
+        // Hide video player, show iframe
+        videoPlayer.style.display = 'none';
+        videoIframe.style.display = 'block';
+        videoPlaceholder.style.display = 'none';
+
+        // Load the proxy URL in iframe
+        videoIframe.src = proxyUrl;
+        currentVideoUrl = url;
+        
+        videoStatus.textContent = '✅ video loaded (no ads)';
+
+        // For download, we still need the video blob
+        // Try to fetch it in background for download
+        fetchVideoForDownload(videoId);
+
+      } catch (err) {
+        console.warn('Video load error:', err);
+        videoStatus.textContent = '⚠️ Failed to load video. Try another link.';
+        videoIframe.style.display = 'none';
+        videoPlayer.style.display = 'none';
+        videoPlaceholder.style.display = 'flex';
+        videoPlaceholder.innerHTML = `
+          <div style="text-align:center;">
+            <i class="fas fa-exclamation-triangle" style="font-size:2.5rem; color:#c73a3a; display:block; margin-bottom:12px;"></i>
+            <div style="font-size:1rem; font-weight:500;">Could not load video</div>
+            <div style="font-size:0.85rem; opacity:0.6; margin-top:6px;">Try another link or use "New" to reset</div>
+          </div>
+        `;
+      }
+    }
+
+    // Background fetch for download capability
+    async function fetchVideoForDownload(videoId) {
+      try {
+        // Try multiple proxies to get the actual video file
+        const proxyUrls = [
+          `https://api.vevioz.com/api/button/mp4/${videoId}`,
+          `https://yt-api.com/api/button/mp4/${videoId}`
+        ];
+
+        for (const proxyUrl of proxyUrls) {
+          try {
+            const response = await fetch(proxyUrl);
+            if (response.ok) {
+              const blob = await response.blob();
+              if (blob.size > 10000) {
+                if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+                videoBlobUrl = URL.createObjectURL(blob);
+                console.log('✅ Video ready for download');
+                break;
+              }
+            }
+          } catch (e) {
+            // Continue to next proxy
+          }
+        }
+      } catch (e) {
+        console.log('Download fetch failed, download may not work');
+      }
+    }
+
     function shareVideo() {
       if (!currentVideoUrl) {
         alert('No video loaded to share.');
         return;
       }
-      // create a fake "shareable link" with the video id and a random token
       const videoId = extractVideoId(currentVideoUrl);
       if (!videoId) {
         alert('invalid video');
@@ -672,10 +857,9 @@
       }
       const token = generateRandomString(8);
       const shareLink = `https://watchthat.social/v/${videoId}?token=${token}&user=${currentUsername}`;
-      // copy to clipboard
       if (navigator.clipboard) {
         navigator.clipboard.writeText(shareLink).then(() => {
-          alert('Share link copied!\n' + shareLink + '\n(only 1 person can use this)');
+          alert('Share link copied!\n' + shareLink + '\n(share with 1 person)');
         }).catch(() => {
           prompt('Copy this share link:', shareLink);
         });
@@ -684,10 +868,9 @@
       }
     }
 
-    // ---------- download video ----------
     function downloadVideo() {
       if (!videoBlobUrl) {
-        alert('No video loaded to download.');
+        alert('No video available for download. Try loading a video first.');
         return;
       }
       const a = document.createElement('a');
@@ -698,22 +881,26 @@
       document.body.removeChild(a);
     }
 
-    // ---------- reset video (new) ----------
     function resetVideo() {
       if (videoBlobUrl) {
         URL.revokeObjectURL(videoBlobUrl);
         videoBlobUrl = '';
       }
+      videoIframe.src = '';
+      videoIframe.style.display = 'none';
       videoPlayer.src = '';
       videoPlayer.style.display = 'none';
       videoPlaceholder.style.display = 'flex';
-      videoPlaceholder.innerHTML = `<i class="fas fa-film" style="font-size:2.4rem; display:block; margin-bottom:10px;"></i> paste a YouTube link & click Watch`;
+      videoPlaceholder.innerHTML = `
+        <i class="fas fa-film" style="font-size:2.4rem; display:block; margin-bottom:10px;"></i>
+        paste a YouTube link & click Watch
+      `;
       currentVideoUrl = '';
       videoStatus.textContent = 'no video loaded';
       youtubeLinkInput.value = '';
     }
 
-    // ---------- theme ----------
+    // ---------- THEME ----------
     function applyTheme(theme) {
       document.body.classList.remove('light-theme', 'dark-theme');
       document.body.classList.add(theme);
@@ -731,44 +918,12 @@
       }
     }
 
-    // ---------- auth flow ----------
+    // ---------- AUTH FLOW ----------
     createAccountBtn.addEventListener('click', function() {
       renderUsernames();
       usernameSelection.style.display = 'block';
-      verifyInput.disabled = true;
-      verifyBtn.disabled = true;
-      verifyInput.value = '';
-      verifyStatus.textContent = '';
-      isVerified = false;
-      enterAppBtn.classList.remove('active');
-      selectedUsername = '';
-      document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
-      // auto-select first? no.
-    });
-
-    verifyBtn.addEventListener('click', function() {
-      const code = verifyInput.value.trim();
-      if (!selectedUsername) {
-        verifyStatus.textContent = '⚠️ pick a username first';
-        verifyStatus.className = 'verify-status error';
-        return;
-      }
-      if (!verifyCode(code)) {
-        verifyStatus.textContent = '❌ enter 4-digit code (e.g. 1234)';
-        verifyStatus.className = 'verify-status error';
-        return;
-      }
-      // success
-      isVerified = true;
-      verifyStatus.textContent = '✅ verified!';
-      verifyStatus.className = 'verify-status success';
-      enterAppBtn.classList.add('active');
-    });
-
-    verifyInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        verifyBtn.click();
-      }
+      resetSlider();
+      setTimeout(initSlider, 50);
     });
 
     enterAppBtn.addEventListener('click', function() {
@@ -782,11 +937,10 @@
       authOverlay.style.display = 'none';
       mainApp.style.display = 'block';
       loadTheme();
-      // reset video state
       resetVideo();
     });
 
-    // ---------- main app events ----------
+    // ---------- MAIN APP EVENTS ----------
     loadVideoBtn.addEventListener('click', function() {
       const link = youtubeLinkInput.value.trim();
       if (!link) {
@@ -806,7 +960,6 @@
     shareBtn.addEventListener('click', shareVideo);
     newVideoBtn.addEventListener('click', resetVideo);
 
-    // settings panel toggle
     settingsToggle.addEventListener('click', function(e) {
       e.stopPropagation();
       settingsPanel.classList.toggle('open');
@@ -818,7 +971,6 @@
       }
     });
 
-    // dark mode
     darkModeToggle.addEventListener('change', function() {
       if (this.checked) {
         applyTheme('dark-theme');
@@ -827,30 +979,14 @@
       }
     });
 
-    // loop & autoplay just update video property if video exists
     loopToggle.addEventListener('change', function() {
-      if (videoPlayer.src) {
-        videoPlayer.loop = this.checked;
-      }
+      // Loop doesn't work with iframe, but we keep it for future
     });
 
-    autoplayToggle.addEventListener('change', function() {
-      // nothing else
-    });
-
-    // on video loaded, respect loop
-    videoPlayer.addEventListener('loadedmetadata', function() {
-      if (loopToggle.checked) {
-        videoPlayer.loop = true;
-      }
-    });
-
-    // ---------- initial ----------
-    resetAuthFlow();
-    // prefill with a demo username list but hidden
+    // ---------- INIT ----------
     renderUsernames();
-    // dark mode from localStorage
     loadTheme();
+    setTimeout(initSlider, 100);
   })();
 </script>
 </body>
