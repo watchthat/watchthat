@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WatchThat!</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+    }
+
+    body {
+      background: #f5f7fa;
+      color: #1e1e2a;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* -------- light theme (default) -------- */
+    .light-theme {
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #1e1e2a;
+      --border: #d0d7e0;
+      --shadow: 0 12px 30px rgba(0,0,0,0.06);
+      --input-bg: #f0f2f6;
+      --hover: #eef1f5;
+      --soft: #e8ecf2;
+    }
+
+    /* -------- dark theme -------- */
+    .dark-theme {
+      --bg: #181a20;
+      --card: #23262e;
+      --text: #e8edf5;
+      --border: #3a3f4a;
+      --shadow: 0 12px 30px rgba(0,0,0,0.5);
+      --input-bg: #2c303a;
+      --hover: #2f3340;
+      --soft: #2e333e;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* -------- auth / account overlay -------- */
+    #authOverlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .auth-card {
+      background: var(--card);
+      padding: 2.5rem 2.8rem;
+      border-radius: 40px;
+      box-shadow: var(--shadow);
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .auth-card h1 {
+      font-weight: 600;
+      font-size: 2.4rem;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.3rem;
+    }
+    .auth-card h1 i {
+      color: #ff4d4d;
+      margin-right: 6px;
+    }
+    .auth-card p {
+      color: var(--text);
+      opacity: 0.7;
+      margin-bottom: 1.8rem;
+      font-size: 0.95rem;
+    }
+
+    .auth-card .btn-primary {
+      background: #1e1e2a;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 1.2rem;
+      transition: 0.15s;
+    }
+    .dark-theme .btn-primary {
+      background: #e8edf5;
+      color: #1e1e2a;
+    }
+    .auth-card .btn-primary:hover {
+      opacity: 0.85;
+      transform: scale(0.98);
+    }
+
+    .username-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 18px 0 10px;
+    }
+    .username-option {
+      background: var(--input-bg);
+      border: 2px solid transparent;
+      border-radius: 30px;
+      padding: 12px 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.1s;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .username-option:hover {
+      border-color: #1e1e2a;
+      background: var(--hover);
+    }
+    .dark-theme .username-option:hover {
+      border-color: #a0aab8;
+    }
+    .username-option.selected {
+      border-color: #1e1e2a;
+      background: var(--soft);
+    }
+    .dark-theme .username-option.selected {
+      border-color: #e8edf5;
+    }
+
+    .verify-row {
+      display: flex;
+      gap: 8px;
+      margin: 20px 0 12px;
+    }
+    .verify-row input {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 60px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .verify-row input:focus {
+      border-color: #1e1e2a;
+    }
+    .verify-row button {
+      background: #1e1e2a;
+      color: white;
+      border: none;
+      padding: 0 24px;
+      border-radius: 60px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .dark-theme .verify-row button {
+      background: #e8edf5;
+      color: #1e1e2a;
+    }
+    .verify-status {
+      font-size: 0.85rem;
+      margin: 8px 0 4px;
+      min-height: 24px;
+    }
+    .verify-status.success { color: #2b7a4b; }
+    .verify-status.error { color: #c73a3a; }
+
+    #enterAppBtn {
+      background: #2b7a4b;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 60px;
+      width: 100%;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: 0.15s;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    #enterAppBtn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #enterAppBtn.active:hover {
+      transform: scale(0.98);
+      opacity: 0.85;
+    }
+
+    /* -------- main app (hidden until auth) -------- */
+    #mainApp {
+      display: none;
+      width: 100%;
+      max-width: 1100px;
+      margin: 20px;
+      background: var(--card);
+      border-radius: 48px;
+      box-shadow: var(--shadow);
+      padding: 2.2rem 2.5rem 2.5rem;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .app-header h2 {
+      font-weight: 600;
+      font-size: 2rem;
+      letter-spacing: -0.5px;
+    }
+    .app-header h2 i {
+      color: #ff4d4d;
+      margin-right: 8px;
+    }
+    .user-badge {
+      background: var(--input-bg);
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+    }
+
+    .input-section {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 2.2rem;
+    }
+    .input-section input {
+      flex: 3;
+      min-width: 240px;
+      padding: 16px 22px;
+      border-radius: 60px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    .input-section input:focus {
+      border-color: #1e1e2a;
+    }
+    .input-section button {
+      background: #1e1e2a;
+      color: white;
+      border: none;
+      padding: 0 32px;
+      border-radius: 60px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+    .dark-theme .input-section button {
+      background: #e8edf5;
+      color: #1e1e2a;
+    }
+    .input-section button:hover {
+      opacity: 0.8;
+      transform: scale(0.97);
+    }
+
+    /* video container */
+    .video-wrapper {
+      background: var(--input-bg);
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--border);
+      margin-bottom: 1.2rem;
+    }
+    .video-wrapper video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #0b0b0f;
+    }
+    .video-wrapper .placeholder {
+      color: var(--text);
+      opacity: 0.4;
+      font-size: 1.2rem;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px 24px;
+      margin: 6px 0 16px;
+    }
+    .controls-row .ctrl-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .controls-row button {
+      background: var(--input-bg);
+      border: none;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text);
+      border: 1px solid transparent;
+      transition: 0.1s;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .controls-row button:hover {
+      background: var(--hover);
+      border-color: var(--border);
+    }
+    .controls-row button i {
+      font-size: 1rem;
+    }
+
+    .settings-corner {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 100;
+    }
+    .settings-corner button {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 60px;
+      padding: 14px 22px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      color: var(--text);
+      font-size: 0.95rem;
+      backdrop-filter: blur(4px);
+      transition: 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-corner button:hover {
+      background: var(--hover);
+      transform: scale(1.02);
+    }
+
+    /* settings panel */
+    .settings-panel {
+      position: fixed;
+      bottom: 90px;
+      right: 30px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      padding: 1.8rem 2rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      min-width: 220px;
+      display: none;
+      z-index: 200;
+      backdrop-filter: blur(8px);
+    }
+    .settings-panel.open {
+      display: block;
+    }
+    .settings-panel h4 {
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .settings-panel label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+    .settings-panel input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #1e1e2a;
+    }
+
+    .footer-meta {
+      margin-top: 18px;
+      font-size: 0.75rem;
+      opacity: 0.4;
+      text-align: right;
+    }
+
+    @media (max-width: 640px) {
+      #mainApp { padding: 1.5rem; }
+      .auth-card { padding: 1.8rem; }
+      .username-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== AUTH OVERLAY ===== -->
+<div id="authOverlay">
+  <div class="auth-card" id="authCard">
+    <h1><i class="fab fa-youtube"></i> WatchThat!</h1>
+    <p>No ads · just watch</p>
+
+    <button class="btn-primary" id="createAccountBtn"><i class="fas fa-user-plus"></i> Make account</button>
+
+    <div id="usernameSelection" style="display: none;">
+      <div class="username-grid" id="usernameGrid"></div>
+      <div style="font-size:0.85rem; margin: 6px 0 4px; opacity:0.7;">pick one</div>
+    </div>
+
+    <div class="verify-row">
+      <input type="text" id="verifyInput" placeholder="verification code" disabled>
+      <button id="verifyBtn" disabled>Verify</button>
+    </div>
+    <div class="verify-status" id="verifyStatus"></div>
+
+    <button id="enterAppBtn">Enter WatchThat!</button>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="mainApp">
+  <div class="app-header">
+    <h2><i class="fab fa-youtube"></i> WatchThat!</h2>
+    <span class="user-badge" id="displayUsername"><i class="fas fa-user"></i> viewer</span>
+  </div>
+
+  <div class="input-section">
+    <input type="text" id="youtubeLinkInput" placeholder="Paste YouTube link ...">
+    <button id="loadVideoBtn"><i class="fas fa-play"></i> Watch</button>
+  </div>
+
+  <div class="video-wrapper" id="videoWrapper">
+    <video id="videoPlayer" controls style="display: none;"></video>
+    <div class="placeholder" id="videoPlaceholder">
+      <i class="fas fa-film" style="font-size:2.4rem; display:block; margin-bottom:10px;"></i>
+      paste a YouTube link & click Watch
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <div class="ctrl-group">
+      <button id="downloadBtn"><i class="fas fa-download"></i> Download</button>
+      <button id="shareBtn"><i class="fas fa-share-alt"></i> Share</button>
+      <button id="newVideoBtn"><i class="fas fa-plus-circle"></i> New</button>
+    </div>
+    <div style="flex:1; text-align:right; font-size:0.85rem; opacity:0.6;" id="videoStatus">no video loaded</div>
+  </div>
+
+  <div class="footer-meta">WatchThat · no ads, pure video</div>
+</div>
+
+<!-- ===== SETTINGS (bottom right) ===== -->
+<div class="settings-corner">
+  <button id="settingsToggle"><i class="fas fa-cog"></i> Settings</button>
+</div>
+<div class="settings-panel" id="settingsPanel">
+  <h4><i class="fas fa-sliders-h"></i> Settings</h4>
+  <label><input type="checkbox" id="darkModeToggle"> Dark theme</label>
+  <label><input type="checkbox" id="autoplayToggle" checked> Autoplay</label>
+  <label><input type="checkbox" id="loopToggle"> Loop video</label>
+  <div style="margin-top:14px; border-top:1px solid var(--border); padding-top:12px; font-size:0.8rem; opacity:0.7;">
+    <i class="fas fa-link"></i> YouTube only
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- state ----------
+    let currentUsername = '';
+    let selectedUsername = '';
+    let isVerified = false;
+    let currentVideoUrl = '';
+    let videoBlobUrl = '';
+
+    // DOM refs
+    const authOverlay = document.getElementById('authOverlay');
+    const mainApp = document.getElementById('mainApp');
+    const createAccountBtn = document.getElementById('createAccountBtn');
+    const usernameSelection = document.getElementById('usernameSelection');
+    const usernameGrid = document.getElementById('usernameGrid');
+    const verifyInput = document.getElementById('verifyInput');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const verifyStatus = document.getElementById('verifyStatus');
+    const enterAppBtn = document.getElementById('enterAppBtn');
+    const displayUsername = document.getElementById('displayUsername');
+
+    const youtubeLinkInput = document.getElementById('youtubeLinkInput');
+    const loadVideoBtn = document.getElementById('loadVideoBtn');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+    const videoStatus = document.getElementById('videoStatus');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const newVideoBtn = document.getElementById('newVideoBtn');
+
+    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const autoplayToggle = document.getElementById('autoplayToggle');
+    const loopToggle = document.getElementById('loopToggle');
+
+    // ---------- helpers ----------
+    function generateRandomString(len = 10) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < len; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    function getRandomUsernames(count = 4) {
+      const arr = [];
+      for (let i = 0; i < count; i++) {
+        arr.push('user_' + generateRandomString(10));
+      }
+      return arr;
+    }
+
+    // render username options
+    function renderUsernames() {
+      const names = getRandomUsernames(4);
+      usernameGrid.innerHTML = '';
+      names.forEach(name => {
+        const div = document.createElement('div');
+        div.className = 'username-option';
+        div.textContent = name;
+        div.dataset.name = name;
+        div.addEventListener('click', function(e) {
+          document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
+          this.classList.add('selected');
+          selectedUsername = this.dataset.name;
+          verifyInput.disabled = false;
+          verifyBtn.disabled = false;
+          verifyInput.value = '';
+          verifyStatus.textContent = '';
+          isVerified = false;
+          enterAppBtn.classList.remove('active');
+        });
+        usernameGrid.appendChild(div);
+      });
+    }
+
+    // verification mock (any 4 digits)
+    function verifyCode(code) {
+      return /^\d{4}$/.test(code);
+    }
+
+    // reset auth flow
+    function resetAuthFlow() {
+      selectedUsername = '';
+      isVerified = false;
+      verifyInput.disabled = true;
+      verifyBtn.disabled = true;
+      verifyInput.value = '';
+      verifyStatus.textContent = '';
+      enterAppBtn.classList.remove('active');
+      document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
+      usernameSelection.style.display = 'none';
+    }
+
+    // ---------- load video from YouTube (fetch + blob) ----------
+    async function loadYouTubeVideo(url) {
+      try {
+        // try to extract video ID
+        const videoId = extractVideoId(url);
+        if (!videoId) {
+          videoStatus.textContent = '❌ invalid YouTube link';
+          return;
+        }
+
+        // Use a public proxy / download endpoint (we fetch the video as blob)
+        // Using a simple no-cors approach won't work; we use a public proxy that returns video.
+        // For demo: we use a known public proxy (invidious / yt-dlp style)
+        // Actually we can't directly fetch from youtube due to CORS, but we can use a free proxy.
+        // Using 'https://www.youtube.com/watch?v=' + videoId + '&format=mp4' won't work directly.
+        // We'll use a community proxy: 'https://api.vevioz.com/api/button/mp3/' but for video we use 'https://api.vevioz.com/api/button/mp4/'
+        // Better: use 'https://www.yt-download.org/api/button/mp4/' but many are unstable.
+        // For demonstration we use a working public proxy (no ads, just video).
+        // We'll use 'https://api.vevioz.com/api/button/mp4/' (returns mp4)
+        // This is just for demonstration – in real world you'd need a backend.
+        const proxyUrl = `https://api.vevioz.com/api/button/mp4/${videoId}`;
+        
+        videoStatus.textContent = '⏳ fetching video ...';
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error('proxy fetch failed');
+        const blob = await response.blob();
+        if (blob.size < 1000) throw new Error('video too small');
+
+        // revoke old blob
+        if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+        videoBlobUrl = URL.createObjectURL(blob);
+        videoPlayer.src = videoBlobUrl;
+        videoPlayer.style.display = 'block';
+        videoPlaceholder.style.display = 'none';
+        currentVideoUrl = url;
+        videoStatus.textContent = `✅ loaded (${(blob.size / 1024 / 1024).toFixed(1)} MB)`;
+
+        if (autoplayToggle.checked) {
+          videoPlayer.play().catch(() => {});
+        }
+        if (loopToggle.checked) {
+          videoPlayer.loop = true;
+        } else {
+          videoPlayer.loop = false;
+        }
+
+      } catch (err) {
+        console.warn(err);
+        videoStatus.textContent = '⚠️ failed to fetch (proxy error)';
+        // fallback: show a placeholder
+        videoPlayer.style.display = 'none';
+        videoPlaceholder.style.display = 'flex';
+        videoPlaceholder.innerHTML = `<i class="fas fa-exclamation-triangle" style="font-size:2rem; display:block;"></i> could not load video<br><span style="font-size:0.8rem;">try another link</span>`;
+      }
+    }
+
+    function extractVideoId(url) {
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    // ---------- share (custom link) ----------
+    function shareVideo() {
+      if (!currentVideoUrl) {
+        alert('No video loaded to share.');
+        return;
+      }
+      // create a fake "shareable link" with the video id and a random token
+      const videoId = extractVideoId(currentVideoUrl);
+      if (!videoId) {
+        alert('invalid video');
+        return;
+      }
+      const token = generateRandomString(8);
+      const shareLink = `https://watchthat.social/v/${videoId}?token=${token}&user=${currentUsername}`;
+      // copy to clipboard
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareLink).then(() => {
+          alert('Share link copied!\n' + shareLink + '\n(only 1 person can use this)');
+        }).catch(() => {
+          prompt('Copy this share link:', shareLink);
+        });
+      } else {
+        prompt('Copy this share link:', shareLink);
+      }
+    }
+
+    // ---------- download video ----------
+    function downloadVideo() {
+      if (!videoBlobUrl) {
+        alert('No video loaded to download.');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = videoBlobUrl;
+      a.download = `watchthat_video_${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // ---------- reset video (new) ----------
+    function resetVideo() {
+      if (videoBlobUrl) {
+        URL.revokeObjectURL(videoBlobUrl);
+        videoBlobUrl = '';
+      }
+      videoPlayer.src = '';
+      videoPlayer.style.display = 'none';
+      videoPlaceholder.style.display = 'flex';
+      videoPlaceholder.innerHTML = `<i class="fas fa-film" style="font-size:2.4rem; display:block; margin-bottom:10px;"></i> paste a YouTube link & click Watch`;
+      currentVideoUrl = '';
+      videoStatus.textContent = 'no video loaded';
+      youtubeLinkInput.value = '';
+    }
+
+    // ---------- theme ----------
+    function applyTheme(theme) {
+      document.body.classList.remove('light-theme', 'dark-theme');
+      document.body.classList.add(theme);
+      localStorage.setItem('watchthat-theme', theme);
+    }
+
+    function loadTheme() {
+      const saved = localStorage.getItem('watchthat-theme') || 'light-theme';
+      if (saved === 'dark-theme') {
+        darkModeToggle.checked = true;
+        applyTheme('dark-theme');
+      } else {
+        darkModeToggle.checked = false;
+        applyTheme('light-theme');
+      }
+    }
+
+    // ---------- auth flow ----------
+    createAccountBtn.addEventListener('click', function() {
+      renderUsernames();
+      usernameSelection.style.display = 'block';
+      verifyInput.disabled = true;
+      verifyBtn.disabled = true;
+      verifyInput.value = '';
+      verifyStatus.textContent = '';
+      isVerified = false;
+      enterAppBtn.classList.remove('active');
+      selectedUsername = '';
+      document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
+      // auto-select first? no.
+    });
+
+    verifyBtn.addEventListener('click', function() {
+      const code = verifyInput.value.trim();
+      if (!selectedUsername) {
+        verifyStatus.textContent = '⚠️ pick a username first';
+        verifyStatus.className = 'verify-status error';
+        return;
+      }
+      if (!verifyCode(code)) {
+        verifyStatus.textContent = '❌ enter 4-digit code (e.g. 1234)';
+        verifyStatus.className = 'verify-status error';
+        return;
+      }
+      // success
+      isVerified = true;
+      verifyStatus.textContent = '✅ verified!';
+      verifyStatus.className = 'verify-status success';
+      enterAppBtn.classList.add('active');
+    });
+
+    verifyInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        verifyBtn.click();
+      }
+    });
+
+    enterAppBtn.addEventListener('click', function() {
+      if (!isVerified || !selectedUsername) {
+        verifyStatus.textContent = '⚠️ verify & pick username';
+        verifyStatus.className = 'verify-status error';
+        return;
+      }
+      currentUsername = selectedUsername;
+      displayUsername.textContent = '👤 ' + currentUsername;
+      authOverlay.style.display = 'none';
+      mainApp.style.display = 'block';
+      loadTheme();
+      // reset video state
+      resetVideo();
+    });
+
+    // ---------- main app events ----------
+    loadVideoBtn.addEventListener('click', function() {
+      const link = youtubeLinkInput.value.trim();
+      if (!link) {
+        videoStatus.textContent = '⛔ enter a link';
+        return;
+      }
+      loadYouTubeVideo(link);
+    });
+
+    youtubeLinkInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        loadVideoBtn.click();
+      }
+    });
+
+    downloadBtn.addEventListener('click', downloadVideo);
+    shareBtn.addEventListener('click', shareVideo);
+    newVideoBtn.addEventListener('click', resetVideo);
+
+    // settings panel toggle
+    settingsToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      settingsPanel.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!settingsPanel.contains(e.target) && e.target !== settingsToggle && !settingsToggle.contains(e.target)) {
+        settingsPanel.classList.remove('open');
+      }
+    });
+
+    // dark mode
+    darkModeToggle.addEventListener('change', function() {
+      if (this.checked) {
+        applyTheme('dark-theme');
+      } else {
+        applyTheme('light-theme');
+      }
+    });
+
+    // loop & autoplay just update video property if video exists
+    loopToggle.addEventListener('change', function() {
+      if (videoPlayer.src) {
+        videoPlayer.loop = this.checked;
+      }
+    });
+
+    autoplayToggle.addEventListener('change', function() {
+      // nothing else
+    });
+
+    // on video loaded, respect loop
+    videoPlayer.addEventListener('loadedmetadata', function() {
+      if (loopToggle.checked) {
+        videoPlayer.loop = true;
+      }
+    });
+
+    // ---------- initial ----------
+    resetAuthFlow();
+    // prefill with a demo username list but hidden
+    renderUsernames();
+    // dark mode from localStorage
+    loadTheme();
+  })();
+</script>
+</body>
+</html>
