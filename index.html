@@ -4,639 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WatchThat!</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-      transition: background 0.2s, color 0.2s, border 0.2s;
-    }
-
-    body {
-      background: #f5f7fa;
-      color: #1e1e2a;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .light-theme {
-      --bg: #f5f7fa;
-      --card: #ffffff;
-      --text: #1e1e2a;
-      --border: #d0d7e0;
-      --shadow: 0 12px 30px rgba(0,0,0,0.06);
-      --input-bg: #f0f2f6;
-      --hover: #eef1f5;
-      --soft: #e8ecf2;
-      --slider-bg: #e0e5ed;
-      --slider-fill: #1e1e2a;
-    }
-
-    .dark-theme {
-      --bg: #181a20;
-      --card: #23262e;
-      --text: #e8edf5;
-      --border: #3a3f4a;
-      --shadow: 0 12px 30px rgba(0,0,0,0.5);
-      --input-bg: #2c303a;
-      --hover: #2f3340;
-      --soft: #2e333e;
-      --slider-bg: #3a3f4a;
-      --slider-fill: #e8edf5;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    /* -------- AUTH OVERLAY -------- */
-    #authOverlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    .auth-card {
-      background: var(--card);
-      padding: 2.5rem 2.8rem;
-      border-radius: 40px;
-      box-shadow: var(--shadow);
-      max-width: 440px;
-      width: 90%;
-      text-align: center;
-      border: 1px solid var(--border);
-    }
-
-    .auth-card h1 {
-      font-weight: 600;
-      font-size: 2.4rem;
-      letter-spacing: -0.5px;
-      margin-bottom: 0.3rem;
-    }
-    .auth-card h1 i {
-      color: #ff4d4d;
-      margin-right: 6px;
-    }
-    .auth-card p {
-      color: var(--text);
-      opacity: 0.7;
-      margin-bottom: 1.8rem;
-      font-size: 0.95rem;
-    }
-
-    .auth-card .btn-primary {
-      background: #1e1e2a;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      border-radius: 60px;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      width: 100%;
-      margin-bottom: 1.2rem;
-      transition: 0.15s;
-    }
-    .dark-theme .btn-primary {
-      background: #e8edf5;
-      color: #1e1e2a;
-    }
-    .auth-card .btn-primary:hover {
-      opacity: 0.85;
-      transform: scale(0.98);
-    }
-
-    .username-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 18px 0 10px;
-    }
-    .username-option {
-      background: var(--input-bg);
-      border: 2px solid transparent;
-      border-radius: 30px;
-      padding: 12px 6px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 0.1s;
-      color: var(--text);
-      font-size: 0.9rem;
-    }
-    .username-option:hover {
-      border-color: #1e1e2a;
-      background: var(--hover);
-    }
-    .dark-theme .username-option:hover {
-      border-color: #a0aab8;
-    }
-    .username-option.selected {
-      border-color: #1e1e2a;
-      background: var(--soft);
-    }
-    .dark-theme .username-option.selected {
-      border-color: #e8edf5;
-    }
-
-    /* SLIDER VERIFICATION */
-    .slider-container {
-      margin: 20px 0 12px;
-      position: relative;
-      width: 100%;
-      height: 52px;
-      background: var(--slider-bg);
-      border-radius: 60px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      user-select: none;
-    }
-    .slider-track {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      font-size: 0.9rem;
-      color: var(--text);
-      opacity: 0.6;
-      transition: opacity 0.2s;
-    }
-    .slider-thumb {
-      position: absolute;
-      left: 4px;
-      top: 4px;
-      width: 44px;
-      height: 44px;
-      background: var(--card);
-      border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: grab;
-      transition: box-shadow 0.2s;
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 1.2rem;
-    }
-    .slider-thumb:active {
-      cursor: grabbing;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    }
-    .slider-thumb.dragging {
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-    }
-    .slider-thumb.success {
-      background: #2b7a4b;
-      color: white;
-      border-color: #2b7a4b;
-    }
-    .slider-fill {
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      background: var(--slider-fill);
-      opacity: 0.15;
-      border-radius: 60px;
-      width: 0%;
-      pointer-events: none;
-      transition: width 0.05s;
-    }
-    .slider-text {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      pointer-events: none;
-      font-weight: 500;
-      font-size: 0.9rem;
-      color: var(--text);
-      opacity: 0.7;
-      z-index: 2;
-    }
-    .slider-text.success-text {
-      opacity: 1;
-      color: #2b7a4b;
-    }
-    .verify-status {
-      font-size: 0.85rem;
-      margin: 8px 0 4px;
-      min-height: 24px;
-    }
-    .verify-status.success { color: #2b7a4b; }
-    .verify-status.error { color: #c73a3a; }
-
-    #enterAppBtn {
-      background: #2b7a4b;
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 60px;
-      width: 100%;
-      font-weight: 700;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-top: 12px;
-      transition: 0.15s;
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    #enterAppBtn.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    #enterAppBtn.active:hover {
-      transform: scale(0.98);
-      opacity: 0.85;
-    }
-
-    /* -------- MAIN APP -------- */
-    #mainApp {
-      display: none;
-      width: 100%;
-      max-width: 1100px;
-      margin: 20px;
-      background: var(--card);
-      border-radius: 48px;
-      box-shadow: var(--shadow);
-      padding: 2.2rem 2.5rem 2.5rem;
-      border: 1px solid var(--border);
-      position: relative;
-    }
-
-    .app-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
-    .app-header h2 {
-      font-weight: 600;
-      font-size: 2rem;
-      letter-spacing: -0.5px;
-    }
-    .app-header h2 i {
-      color: #ff4d4d;
-      margin-right: 8px;
-    }
-    .user-badge {
-      background: var(--input-bg);
-      padding: 8px 20px;
-      border-radius: 40px;
-      font-weight: 500;
-      font-size: 0.9rem;
-      border: 1px solid var(--border);
-    }
-
-    .input-section {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 2.2rem;
-    }
-    .input-section input {
-      flex: 3;
-      min-width: 240px;
-      padding: 16px 22px;
-      border-radius: 60px;
-      border: 1px solid var(--border);
-      background: var(--input-bg);
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
-    }
-    .input-section input:focus {
-      border-color: #1e1e2a;
-    }
-    .input-section button {
-      background: #1e1e2a;
-      color: white;
-      border: none;
-      padding: 0 32px;
-      border-radius: 60px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: 0.15s;
-      white-space: nowrap;
-    }
-    .dark-theme .input-section button {
-      background: #e8edf5;
-      color: #1e1e2a;
-    }
-    .input-section button:hover {
-      opacity: 0.8;
-      transform: scale(0.97);
-    }
-
-    .video-wrapper {
-      background: var(--input-bg);
-      border-radius: 32px;
-      overflow: hidden;
-      position: relative;
-      aspect-ratio: 16 / 9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 1px solid var(--border);
-      margin-bottom: 1.2rem;
-    }
-    .video-wrapper iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: none;
-    }
-    .video-wrapper video {
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: #0b0b0f;
-      display: none;
-    }
-    .video-wrapper .placeholder {
-      color: var(--text);
-      opacity: 0.4;
-      font-size: 1.2rem;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 14px 24px;
-      margin: 6px 0 16px;
-    }
-    .controls-row .ctrl-group {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .controls-row button {
-      background: var(--input-bg);
-      border: none;
-      padding: 8px 18px;
-      border-radius: 40px;
-      font-weight: 500;
-      cursor: pointer;
-      color: var(--text);
-      border: 1px solid transparent;
-      transition: 0.1s;
-      font-size: 0.9rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .controls-row button:hover {
-      background: var(--hover);
-      border-color: var(--border);
-    }
-    .controls-row button i {
-      font-size: 1rem;
-    }
-
-    .settings-corner {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      z-index: 100;
-    }
-    .settings-corner button {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 60px;
-      padding: 14px 22px;
-      font-weight: 600;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      color: var(--text);
-      font-size: 0.95rem;
-      backdrop-filter: blur(4px);
-      transition: 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .settings-corner button:hover {
-      background: var(--hover);
-      transform: scale(1.02);
-    }
-
-    .settings-panel {
-      position: fixed;
-      bottom: 90px;
-      right: 30px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 1.8rem 2rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-      min-width: 220px;
-      display: none;
-      z-index: 200;
-      backdrop-filter: blur(8px);
-    }
-    .settings-panel.open {
-      display: block;
-    }
-    .settings-panel h4 {
-      margin-bottom: 16px;
-      font-weight: 600;
-    }
-    .settings-panel label {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      padding: 8px 0;
-    }
-    .settings-panel input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: #1e1e2a;
-    }
-
-    .footer-meta {
-      margin-top: 18px;
-      font-size: 0.75rem;
-      opacity: 0.4;
-      text-align: right;
-    }
-
-    .loader {
-      display: inline-block;
-      width: 30px;
-      height: 30px;
-      border: 3px solid var(--border);
-      border-radius: 50%;
-      border-top-color: var(--text);
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Share popup */
-    .share-popup {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 300;
-    }
-    .share-popup.active {
-      display: flex;
-    }
-    .share-popup-content {
-      background: var(--card);
-      padding: 2rem;
-      border-radius: 32px;
-      max-width: 500px;
-      width: 90%;
-      border: 1px solid var(--border);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-    .share-popup-content h3 {
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-    .share-popup-content p {
-      opacity: 0.7;
-      margin-bottom: 1.2rem;
-      font-size: 0.9rem;
-    }
-    .share-link-box {
-      background: var(--input-bg);
-      padding: 12px 16px;
-      border-radius: 12px;
-      word-break: break-all;
-      font-size: 0.85rem;
-      border: 1px solid var(--border);
-      margin-bottom: 1rem;
-      user-select: all;
-    }
-    .share-popup-content .btn-group {
-      display: flex;
-      gap: 10px;
-    }
-    .share-popup-content .btn-group button {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 60px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-    .btn-copy {
-      background: #1e1e2a;
-      color: white;
-    }
-    .dark-theme .btn-copy {
-      background: #e8edf5;
-      color: #1e1e2a;
-    }
-    .btn-copy:hover {
-      opacity: 0.8;
-      transform: scale(0.97);
-    }
-    .btn-close-share {
-      background: var(--input-bg);
-      color: var(--text);
-    }
-    .btn-close-share:hover {
-      background: var(--hover);
-    }
-
-    /* Toast notification */
-    .toast {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--card);
-      color: var(--text);
-      padding: 12px 24px;
-      border-radius: 60px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      font-weight: 500;
-      display: none;
-      z-index: 400;
-      animation: slideUp 0.3s ease;
-    }
-    .toast.show {
-      display: block;
-    }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-      to { opacity: 1; transform: translateX(-50%) translateY(0); }
-    }
-
-    @media (max-width: 640px) {
-      #mainApp { padding: 1.5rem; }
-      .auth-card { padding: 1.8rem; }
-      .username-grid { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <!-- ===== AUTH OVERLAY ===== -->
 <div id="authOverlay">
-  <div class="auth-card" id="authCard">
-    <h1><i class="fab fa-youtube"></i> WatchThat!</h1>
-    <p>No ads · just watch</p>
+  <div class="auth-card">
+    <div class="logo">
+      <i class="fas fa-play-circle"></i>
+      <span>WatchThat</span>
+    </div>
+    <p class="subtitle">Watch YouTube without ads</p>
 
-    <button class="btn-primary" id="createAccountBtn"><i class="fas fa-user-plus"></i> Make account</button>
+    <button class="btn-primary" id="createAccountBtn">
+      <i class="fas fa-user-plus"></i> Get Started
+    </button>
 
     <div id="usernameSelection" style="display: none;">
       <div class="username-grid" id="usernameGrid"></div>
-      <div style="font-size:0.85rem; margin: 6px 0 4px; opacity:0.7;">pick a username</div>
+      <div class="hint-text">choose your username</div>
     </div>
 
-    <!-- SLIDER VERIFICATION -->
     <div class="slider-container" id="sliderContainer">
       <div class="slider-fill" id="sliderFill"></div>
-      <div class="slider-text" id="sliderText">▶ drag to verify</div>
+      <div class="slider-text" id="sliderText">
+        <i class="fas fa-arrow-right"></i> Slide to verify
+      </div>
       <div class="slider-thumb" id="sliderThumb">
-        <i class="fas fa-arrow-right"></i>
+        <i class="fas fa-chevron-right"></i>
       </div>
     </div>
     <div class="verify-status" id="verifyStatus"></div>
 
-    <button id="enterAppBtn">Enter WatchThat!</button>
+    <button id="enterAppBtn">Enter WatchThat</button>
   </div>
 </div>
 
-<!-- ===== SHARE POPUP ===== -->
-<div class="share-popup" id="sharePopup">
-  <div class="share-popup-content">
-    <h3><i class="fas fa-share-alt" style="margin-right:8px;"></i>Share this video</h3>
-    <p>Send this link to anyone to watch with you</p>
-    <div class="share-link-box" id="shareLinkDisplay">Loading...</div>
-    <div class="btn-group">
-      <button class="btn-copy" id="copyShareBtn"><i class="fas fa-copy"></i> Copy Link</button>
-      <button class="btn-close-share" id="closeShareBtn">Close</button>
+<!-- ===== DOWNLOAD POPUP ===== -->
+<div class="download-popup" id="downloadPopup">
+  <div class="download-popup-content">
+    <div class="popup-header">
+      <i class="fas fa-download"></i>
+      <h3>Download Video</h3>
     </div>
+    <p class="popup-subtitle">Choose a download method</p>
+    <div class="download-options" id="downloadOptions"></div>
+    <button class="btn-close-download" id="closeDownloadBtn">Cancel</button>
   </div>
 </div>
 
@@ -645,563 +61,108 @@
 
 <!-- ===== MAIN APP ===== -->
 <div id="mainApp">
-  <div class="app-header">
-    <h2><i class="fab fa-youtube"></i> WatchThat!</h2>
-    <span class="user-badge" id="displayUsername"><i class="fas fa-user"></i> viewer</span>
-  </div>
+  <header class="app-header">
+    <div class="logo">
+      <i class="fas fa-play-circle"></i>
+      <span>WatchThat</span>
+    </div>
+    <div class="header-actions">
+      <span class="user-badge" id="displayUsername">
+        <i class="fas fa-user"></i> viewer
+      </span>
+    </div>
+  </header>
 
   <div class="input-section">
-    <input type="text" id="youtubeLinkInput" placeholder="Paste YouTube link ...">
-    <button id="loadVideoBtn"><i class="fas fa-play"></i> Watch</button>
+    <div class="input-wrapper">
+      <i class="fas fa-link input-icon"></i>
+      <input type="text" id="youtubeLinkInput" placeholder="Paste YouTube link here...">
+    </div>
+    <button id="loadVideoBtn">
+      <i class="fas fa-play"></i> Watch
+    </button>
   </div>
 
   <div class="video-wrapper" id="videoWrapper">
-    <iframe id="videoIframe" allowfullscreen></iframe>
-    <video id="videoPlayer" controls></video>
-    <div class="placeholder" id="videoPlaceholder">
-      <i class="fas fa-film" style="font-size:2.4rem; display:block; margin-bottom:10px;"></i>
-      paste a YouTube link & click Watch
+    <div class="video-container">
+      <iframe id="videoIframe" allowfullscreen></iframe>
+      <div class="placeholder" id="videoPlaceholder">
+        <div class="placeholder-icon">
+          <i class="fas fa-film"></i>
+        </div>
+        <h3>Ready to watch</h3>
+        <p>Paste a YouTube link and click Watch</p>
+      </div>
     </div>
   </div>
 
   <div class="controls-row">
     <div class="ctrl-group">
-      <button id="downloadBtn"><i class="fas fa-download"></i> Download</button>
-      <button id="shareBtn"><i class="fas fa-share-alt"></i> Share</button>
-      <button id="newVideoBtn"><i class="fas fa-plus-circle"></i> New</button>
+      <button id="downloadBtn">
+        <i class="fas fa-download"></i> Download
+      </button>
+      <button id="newVideoBtn">
+        <i class="fas fa-plus-circle"></i> New
+      </button>
+      <button id="reloadBtn">
+        <i class="fas fa-sync-alt"></i> Reload
+      </button>
     </div>
-    <div style="flex:1; text-align:right; font-size:0.85rem; opacity:0.6;" id="videoStatus">no video loaded</div>
+    <div class="video-status" id="videoStatus">
+      <span class="status-dot"></span>
+      no video loaded
+    </div>
   </div>
 
-  <div class="footer-meta">WatchThat · no ads, pure video</div>
+  <div class="footer-meta">
+    WatchThat &middot; No ads &middot; Pure video
+  </div>
 </div>
 
-<!-- ===== SETTINGS ===== -->
-<div class="settings-corner">
-  <button id="settingsToggle"><i class="fas fa-cog"></i> Settings</button>
-</div>
+<!-- ===== SETTINGS BUTTON ===== -->
+<button class="settings-btn" id="settingsToggle">
+  <i class="fas fa-sliders-h"></i>
+  <span>Settings</span>
+</button>
+
+<!-- ===== SETTINGS PANEL ===== -->
 <div class="settings-panel" id="settingsPanel">
-  <h4><i class="fas fa-sliders-h"></i> Settings</h4>
-  <label><input type="checkbox" id="darkModeToggle"> Dark theme</label>
-  <label><input type="checkbox" id="autoplayToggle" checked> Autoplay</label>
-  <label><input type="checkbox" id="loopToggle"> Loop video</label>
-  <div style="margin-top:14px; border-top:1px solid var(--border); padding-top:12px; font-size:0.8rem; opacity:0.7;">
-    <i class="fas fa-link"></i> YouTube only
+  <div class="settings-header">
+    <i class="fas fa-cog"></i>
+    <h4>Settings</h4>
+  </div>
+  
+  <div class="setting-group">
+    <span class="label">Appearance</span>
+    <label class="toggle-item">
+      <input type="checkbox" id="darkModeToggle">
+      <span class="toggle-label">Dark Mode</span>
+    </label>
+    <label class="toggle-item">
+      <input type="checkbox" id="cinemaModeToggle">
+      <span class="toggle-label">Cinema Mode</span>
+    </label>
+  </div>
+
+  <div class="setting-group">
+    <span class="label">Player</span>
+    <label class="toggle-item">
+      <input type="checkbox" id="autoplayToggle" checked>
+      <span class="toggle-label">Autoplay</span>
+    </label>
+    <label class="toggle-item">
+      <input type="checkbox" id="loopToggle">
+      <span class="toggle-label">Loop Video</span>
+    </label>
+  </div>
+
+  <div class="setting-group" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+    <button class="reset-btn" id="resetSettingsBtn">
+      <i class="fas fa-undo"></i> Reset All Settings
+    </button>
   </div>
 </div>
 
-<script>
-  (function() {
-    // ---------- STATE ----------
-    let currentUsername = '';
-    let selectedUsername = '';
-    let isVerified = false;
-    let currentVideoUrl = '';
-    let currentVideoId = '';
-    let videoBlobUrl = '';
-    let shareTokens = JSON.parse(localStorage.getItem('watchthat_share_tokens') || '{}');
-
-    // DOM refs
-    const authOverlay = document.getElementById('authOverlay');
-    const mainApp = document.getElementById('mainApp');
-    const createAccountBtn = document.getElementById('createAccountBtn');
-    const usernameSelection = document.getElementById('usernameSelection');
-    const usernameGrid = document.getElementById('usernameGrid');
-    const verifyStatus = document.getElementById('verifyStatus');
-    const enterAppBtn = document.getElementById('enterAppBtn');
-    const displayUsername = document.getElementById('displayUsername');
-
-    // Slider elements
-    const sliderContainer = document.getElementById('sliderContainer');
-    const sliderThumb = document.getElementById('sliderThumb');
-    const sliderFill = document.getElementById('sliderFill');
-    const sliderText = document.getElementById('sliderText');
-
-    const youtubeLinkInput = document.getElementById('youtubeLinkInput');
-    const loadVideoBtn = document.getElementById('loadVideoBtn');
-    const videoIframe = document.getElementById('videoIframe');
-    const videoPlayer = document.getElementById('videoPlayer');
-    const videoPlaceholder = document.getElementById('videoPlaceholder');
-    const videoStatus = document.getElementById('videoStatus');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const shareBtn = document.getElementById('shareBtn');
-    const newVideoBtn = document.getElementById('newVideoBtn');
-
-    // Share popup
-    const sharePopup = document.getElementById('sharePopup');
-    const shareLinkDisplay = document.getElementById('shareLinkDisplay');
-    const copyShareBtn = document.getElementById('copyShareBtn');
-    const closeShareBtn = document.getElementById('closeShareBtn');
-
-    // Toast
-    const toast = document.getElementById('toast');
-
-    const settingsToggle = document.getElementById('settingsToggle');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    const autoplayToggle = document.getElementById('autoplayToggle');
-    const loopToggle = document.getElementById('loopToggle');
-
-    // ---------- HELPERS ----------
-    function generateRandomString(len = 16) {
-      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-      let result = '';
-      for (let i = 0; i < len; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;
-    }
-
-    function getRandomUsernames(count = 4) {
-      const arr = [];
-      for (let i = 0; i < count; i++) {
-        arr.push('user_' + generateRandomString(10));
-      }
-      return arr;
-    }
-
-    function renderUsernames() {
-      const names = getRandomUsernames(4);
-      usernameGrid.innerHTML = '';
-      names.forEach(name => {
-        const div = document.createElement('div');
-        div.className = 'username-option';
-        div.textContent = name;
-        div.dataset.name = name;
-        div.addEventListener('click', function() {
-          document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
-          this.classList.add('selected');
-          selectedUsername = this.dataset.name;
-          checkVerification();
-        });
-        usernameGrid.appendChild(div);
-      });
-    }
-
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
-    }
-
-    // ---------- SLIDER VERIFICATION ----------
-    let isDragging = false;
-
-    function initSlider() {
-      const containerWidth = sliderContainer.offsetWidth - 48;
-
-      function updateSlider(clientX) {
-        const rect = sliderContainer.getBoundingClientRect();
-        let x = clientX - rect.left - 22;
-        x = Math.max(4, Math.min(x, containerWidth));
-        const progress = x / containerWidth;
-        sliderThumb.style.left = x + 'px';
-        sliderFill.style.width = (progress * 100) + '%';
-        return progress;
-      }
-
-      function onStart(e) {
-        if (isVerified) return;
-        e.preventDefault();
-        const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
-        isDragging = true;
-        sliderThumb.classList.add('dragging');
-        sliderText.textContent = '▶ drag to verify';
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onEnd);
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('touchend', onEnd);
-      }
-
-      function onMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
-        const progress = updateSlider(clientX);
-        if (progress > 0.95) {
-          completeVerification();
-        }
-      }
-
-      function onEnd(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        sliderThumb.classList.remove('dragging');
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onEnd);
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onEnd);
-
-        const thumbLeft = parseFloat(sliderThumb.style.left) || 4;
-        const progress = thumbLeft / (sliderContainer.offsetWidth - 48);
-        if (progress > 0.9) {
-          completeVerification();
-        } else {
-          sliderThumb.style.left = '4px';
-          sliderFill.style.width = '0%';
-          sliderText.textContent = '▶ drag to verify';
-          sliderText.className = 'slider-text';
-          sliderThumb.className = 'slider-thumb';
-          sliderThumb.innerHTML = '<i class="fas fa-arrow-right"></i>';
-        }
-      }
-
-      function completeVerification() {
-        if (isVerified) return;
-        isVerified = true;
-        sliderThumb.style.left = (sliderContainer.offsetWidth - 48) + 'px';
-        sliderFill.style.width = '100%';
-        sliderText.textContent = '✅ Verified!';
-        sliderText.className = 'slider-text success-text';
-        sliderThumb.className = 'slider-thumb success';
-        sliderThumb.innerHTML = '<i class="fas fa-check"></i>';
-        verifyStatus.textContent = '✅ verification complete!';
-        verifyStatus.className = 'verify-status success';
-        checkVerification();
-      }
-
-      sliderContainer.addEventListener('mousedown', onStart);
-      sliderContainer.addEventListener('touchstart', onStart, { passive: false });
-    }
-
-    function resetSlider() {
-      isVerified = false;
-      sliderThumb.style.left = '4px';
-      sliderFill.style.width = '0%';
-      sliderText.textContent = '▶ drag to verify';
-      sliderText.className = 'slider-text';
-      sliderThumb.className = 'slider-thumb';
-      sliderThumb.innerHTML = '<i class="fas fa-arrow-right"></i>';
-      verifyStatus.textContent = '';
-      verifyStatus.className = 'verify-status';
-      enterAppBtn.classList.remove('active');
-    }
-
-    function checkVerification() {
-      if (isVerified && selectedUsername) {
-        enterAppBtn.classList.add('active');
-      } else {
-        enterAppBtn.classList.remove('active');
-      }
-    }
-
-    // ---------- EXTRACT VIDEO ID ----------
-    function extractVideoId(url) {
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-      const match = url.match(regex);
-      return match ? match[1] : null;
-    }
-
-    // ---------- GET BASE URL FOR GITHUB PAGES ----------
-    function getBaseUrl() {
-      // Auto-detect GitHub Pages URL
-      const hostname = window.location.hostname;
-      if (hostname.includes('github.io')) {
-        return window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
-      }
-      // Fallback for local development
-      return window.location.origin;
-    }
-
-    // ---------- LOAD VIDEO USING PROXY ----------
-    function loadYouTubeVideo(url) {
-      try {
-        const videoId = extractVideoId(url);
-        if (!videoId) {
-          videoStatus.textContent = '❌ invalid YouTube link';
-          return;
-        }
-
-        currentVideoId = videoId;
-
-        // Convert to yout-ube.com proxy
-        const proxyUrl = `https://yout-ube.com/watch?v=${videoId}`;
-
-        videoStatus.textContent = '⏳ loading video...';
-
-        // Hide video player, show iframe
-        videoPlayer.style.display = 'none';
-        videoIframe.style.display = 'block';
-        videoPlaceholder.style.display = 'none';
-
-        // Load the proxy URL in iframe
-        videoIframe.src = proxyUrl;
-        currentVideoUrl = url;
-        
-        videoStatus.textContent = '✅ video loaded (no ads)';
-
-        // Try to fetch video for download in background
-        fetchVideoForDownload(videoId);
-
-      } catch (err) {
-        console.warn('Video load error:', err);
-        videoStatus.textContent = '⚠️ Failed to load video. Try another link.';
-        videoIframe.style.display = 'none';
-        videoPlayer.style.display = 'none';
-        videoPlaceholder.style.display = 'flex';
-        videoPlaceholder.innerHTML = `
-          <div style="text-align:center;">
-            <i class="fas fa-exclamation-triangle" style="font-size:2.5rem; color:#c73a3a; display:block; margin-bottom:12px;"></i>
-            <div style="font-size:1rem; font-weight:500;">Could not load video</div>
-            <div style="font-size:0.85rem; opacity:0.6; margin-top:6px;">Try another link or use "New" to reset</div>
-          </div>
-        `;
-      }
-    }
-
-    // Background fetch for download capability
-    async function fetchVideoForDownload(videoId) {
-      try {
-        const proxyUrls = [
-          `https://api.vevioz.com/api/button/mp4/${videoId}`,
-          `https://yt-api.com/api/button/mp4/${videoId}`
-        ];
-
-        for (const proxyUrl of proxyUrls) {
-          try {
-            const response = await fetch(proxyUrl);
-            if (response.ok) {
-              const blob = await response.blob();
-              if (blob.size > 10000) {
-                if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
-                videoBlobUrl = URL.createObjectURL(blob);
-                console.log('✅ Video ready for download');
-                break;
-              }
-            }
-          } catch (e) {
-            // Continue to next proxy
-          }
-        }
-      } catch (e) {
-        console.log('Download fetch failed');
-      }
-    }
-
-    // ---------- SHARE VIDEO ----------
-    function shareVideo() {
-      if (!currentVideoId) {
-        showToast('⚠️ No video loaded to share');
-        return;
-      }
-      
-      // Generate a unique share token
-      const shareToken = generateRandomString(16);
-      
-      // Get base URL
-      const baseUrl = getBaseUrl();
-      
-      // Create the share link
-      const shareLink = `${baseUrl}/watchwithme/${shareToken}`;
-      
-      // Display in popup
-      shareLinkDisplay.textContent = shareLink;
-      sharePopup.classList.add('active');
-      
-      // Store the token with video ID
-      shareTokens[shareToken] = {
-        videoId: currentVideoId,
-        sharedBy: currentUsername,
-        timestamp: Date.now(),
-        videoUrl: currentVideoUrl
-      };
-      localStorage.setItem('watchthat_share_tokens', JSON.stringify(shareTokens));
-    }
-
-    // Copy share link
-    copyShareBtn.addEventListener('click', function() {
-      const link = shareLinkDisplay.textContent;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(link).then(() => {
-          this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-          showToast('✅ Link copied to clipboard!');
-          setTimeout(() => {
-            this.innerHTML = '<i class="fas fa-copy"></i> Copy Link';
-          }, 2000);
-        }).catch(() => {
-          selectAndCopy(link);
-        });
-      } else {
-        selectAndCopy(link);
-      }
-    });
-
-    function selectAndCopy(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      copyShareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-      showToast('✅ Link copied to clipboard!');
-      setTimeout(() => {
-        copyShareBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Link';
-      }, 2000);
-    }
-
-    // Close share popup
-    closeShareBtn.addEventListener('click', function() {
-      sharePopup.classList.remove('active');
-    });
-
-    // Close on click outside
-    sharePopup.addEventListener('click', function(e) {
-      if (e.target === this) {
-        sharePopup.classList.remove('active');
-      }
-    });
-
-    // ---------- DOWNLOAD VIDEO ----------
-    function downloadVideo() {
-      if (!videoBlobUrl) {
-        showToast('⚠️ No video available for download');
-        return;
-      }
-      const a = document.createElement('a');
-      a.href = videoBlobUrl;
-      a.download = `watchthat_video_${Date.now()}.mp4`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showToast('✅ Download started!');
-    }
-
-    // ---------- RESET VIDEO ----------
-    function resetVideo() {
-      if (videoBlobUrl) {
-        URL.revokeObjectURL(videoBlobUrl);
-        videoBlobUrl = '';
-      }
-      videoIframe.src = '';
-      videoIframe.style.display = 'none';
-      videoPlayer.src = '';
-      videoPlayer.style.display = 'none';
-      videoPlaceholder.style.display = 'flex';
-      videoPlaceholder.innerHTML = `
-        <i class="fas fa-film" style="font-size:2.4rem; display:block; margin-bottom:10px;"></i>
-        paste a YouTube link & click Watch
-      `;
-      currentVideoUrl = '';
-      currentVideoId = '';
-      videoStatus.textContent = 'no video loaded';
-      youtubeLinkInput.value = '';
-      showToast('🔄 Video reset');
-    }
-
-    // ---------- THEME ----------
-    function applyTheme(theme) {
-      document.body.classList.remove('light-theme', 'dark-theme');
-      document.body.classList.add(theme);
-      localStorage.setItem('watchthat-theme', theme);
-    }
-
-    function loadTheme() {
-      const saved = localStorage.getItem('watchthat-theme') || 'light-theme';
-      if (saved === 'dark-theme') {
-        darkModeToggle.checked = true;
-        applyTheme('dark-theme');
-      } else {
-        darkModeToggle.checked = false;
-        applyTheme('light-theme');
-      }
-    }
-
-    // ---------- CHECK FOR SHARED LINK ON LOAD ----------
-    function checkSharedLink() {
-      const path = window.location.pathname;
-      const match = path.match(/\/watchwithme\/([a-zA-Z0-9]+)/);
-      if (match) {
-        const token = match[1];
-        const shareData = shareTokens[token];
-        if (shareData && shareData.videoId) {
-          // Load the shared video
-          setTimeout(() => {
-            const videoId = shareData.videoId;
-            const proxyUrl = `https://yout-ube.com/watch?v=${videoId}`;
-            videoIframe.style.display = 'block';
-            videoPlaceholder.style.display = 'none';
-            videoIframe.src = proxyUrl;
-            currentVideoId = videoId;
-            currentVideoUrl = shareData.videoUrl || `https://www.youtube.com/watch?v=${videoId}`;
-            videoStatus.textContent = '✅ shared video loaded';
-            showToast('📹 Shared video loaded!');
-          }, 500);
-        }
-      }
-    }
-
-    // ---------- AUTH FLOW ----------
-    createAccountBtn.addEventListener('click', function() {
-      renderUsernames();
-      usernameSelection.style.display = 'block';
-      resetSlider();
-      setTimeout(initSlider, 50);
-    });
-
-    enterAppBtn.addEventListener('click', function() {
-      if (!isVerified || !selectedUsername) {
-        verifyStatus.textContent = '⚠️ verify & pick username';
-        verifyStatus.className = 'verify-status error';
-        return;
-      }
-      currentUsername = selectedUsername;
-      displayUsername.textContent = '👤 ' + currentUsername;
-      authOverlay.style.display = 'none';
-      mainApp.style.display = 'block';
-      loadTheme();
-      resetVideo();
-      // Check if there's a shared link
-      setTimeout(checkSharedLink, 100);
-    });
-
-    // ---------- MAIN APP EVENTS ----------
-    loadVideoBtn.addEventListener('click', function() {
-      const link = youtubeLinkInput.value.trim();
-      if (!link) {
-        videoStatus.textContent = '⛔ enter a link';
-        showToast('⚠️ Please enter a YouTube link');
-        return;
-      }
-      loadYouTubeVideo(link);
-    });
-
-    youtubeLinkInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        loadVideoBtn.click();
-      }
-    });
-
-    downloadBtn.addEventListener('click', downloadVideo);
-    shareBtn.addEventListener('click', shareVideo);
-    newVideoBtn.addEventListener('click', resetVideo);
-
-    settingsToggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      settingsPanel.classList.toggle('open');
-    });
-
-    document.addEventListener('click', function(e) {
-      if (!settingsPanel.contains(e.target) && e.target !== settingsToggle && !settingsToggle.contains(e.target)) {
-        settingsPanel.classList.remove('open');
-      }
-    });
-
-    darkModeToggle.addEventListener('change', function() {
-      if (this.checked) {
-        applyTheme('dark-theme');
-      } else {
-        applyTheme('light-theme');
-      }
-    });
-
-    // ---------- INIT ----------
-    renderUsernames();
-    loadTheme();
-    setTimeout(initSlider, 100);
-  })();
-</script>
+<script src="script.js"></script>
 </body>
 </html>
