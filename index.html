@@ -491,6 +491,106 @@
       to { transform: rotate(360deg); }
     }
 
+    /* Share popup */
+    .share-popup {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 300;
+    }
+    .share-popup.active {
+      display: flex;
+    }
+    .share-popup-content {
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 32px;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .share-popup-content h3 {
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .share-popup-content p {
+      opacity: 0.7;
+      margin-bottom: 1.2rem;
+      font-size: 0.9rem;
+    }
+    .share-link-box {
+      background: var(--input-bg);
+      padding: 12px 16px;
+      border-radius: 12px;
+      word-break: break-all;
+      font-size: 0.85rem;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      user-select: all;
+    }
+    .share-popup-content .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+    .share-popup-content .btn-group button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 60px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-copy {
+      background: #1e1e2a;
+      color: white;
+    }
+    .dark-theme .btn-copy {
+      background: #e8edf5;
+      color: #1e1e2a;
+    }
+    .btn-copy:hover {
+      opacity: 0.8;
+      transform: scale(0.97);
+    }
+    .btn-close-share {
+      background: var(--input-bg);
+      color: var(--text);
+    }
+    .btn-close-share:hover {
+      background: var(--hover);
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 60px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      font-weight: 500;
+      display: none;
+      z-index: 400;
+      animation: slideUp 0.3s ease;
+    }
+    .toast.show {
+      display: block;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
     @media (max-width: 640px) {
       #mainApp { padding: 1.5rem; }
       .auth-card { padding: 1.8rem; }
@@ -526,6 +626,22 @@
     <button id="enterAppBtn">Enter WatchThat!</button>
   </div>
 </div>
+
+<!-- ===== SHARE POPUP ===== -->
+<div class="share-popup" id="sharePopup">
+  <div class="share-popup-content">
+    <h3><i class="fas fa-share-alt" style="margin-right:8px;"></i>Share this video</h3>
+    <p>Send this link to anyone to watch with you</p>
+    <div class="share-link-box" id="shareLinkDisplay">Loading...</div>
+    <div class="btn-group">
+      <button class="btn-copy" id="copyShareBtn"><i class="fas fa-copy"></i> Copy Link</button>
+      <button class="btn-close-share" id="closeShareBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
 
 <!-- ===== MAIN APP ===== -->
 <div id="mainApp">
@@ -581,7 +697,9 @@
     let selectedUsername = '';
     let isVerified = false;
     let currentVideoUrl = '';
+    let currentVideoId = '';
     let videoBlobUrl = '';
+    let shareTokens = JSON.parse(localStorage.getItem('watchthat_share_tokens') || '{}');
 
     // DOM refs
     const authOverlay = document.getElementById('authOverlay');
@@ -609,6 +727,15 @@
     const shareBtn = document.getElementById('shareBtn');
     const newVideoBtn = document.getElementById('newVideoBtn');
 
+    // Share popup
+    const sharePopup = document.getElementById('sharePopup');
+    const shareLinkDisplay = document.getElementById('shareLinkDisplay');
+    const copyShareBtn = document.getElementById('copyShareBtn');
+    const closeShareBtn = document.getElementById('closeShareBtn');
+
+    // Toast
+    const toast = document.getElementById('toast');
+
     const settingsToggle = document.getElementById('settingsToggle');
     const settingsPanel = document.getElementById('settingsPanel');
     const darkModeToggle = document.getElementById('darkModeToggle');
@@ -616,8 +743,8 @@
     const loopToggle = document.getElementById('loopToggle');
 
     // ---------- HELPERS ----------
-    function generateRandomString(len = 10) {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    function generateRandomString(len = 16) {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       let result = '';
       for (let i = 0; i < len; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -649,6 +776,14 @@
         });
         usernameGrid.appendChild(div);
       });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
     }
 
     // ---------- SLIDER VERIFICATION ----------
@@ -752,18 +887,22 @@
       }
     }
 
-    // ---------- CONVERT YOUTUBE LINK TO yout-ube.com ----------
-    function convertToProxyLink(url) {
-      const videoId = extractVideoId(url);
-      if (!videoId) return null;
-      // Use yout-ube.com as the proxy (working YouTube mirror)
-      return `https://yout-ube.com/watch?v=${videoId}`;
-    }
-
+    // ---------- EXTRACT VIDEO ID ----------
     function extractVideoId(url) {
       const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
       const match = url.match(regex);
       return match ? match[1] : null;
+    }
+
+    // ---------- GET BASE URL FOR GITHUB PAGES ----------
+    function getBaseUrl() {
+      // Auto-detect GitHub Pages URL
+      const hostname = window.location.hostname;
+      if (hostname.includes('github.io')) {
+        return window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+      }
+      // Fallback for local development
+      return window.location.origin;
     }
 
     // ---------- LOAD VIDEO USING PROXY ----------
@@ -775,12 +914,10 @@
           return;
         }
 
+        currentVideoId = videoId;
+
         // Convert to yout-ube.com proxy
-        const proxyUrl = convertToProxyLink(url);
-        if (!proxyUrl) {
-          videoStatus.textContent = '❌ Could not convert link';
-          return;
-        }
+        const proxyUrl = `https://yout-ube.com/watch?v=${videoId}`;
 
         videoStatus.textContent = '⏳ loading video...';
 
@@ -795,8 +932,7 @@
         
         videoStatus.textContent = '✅ video loaded (no ads)';
 
-        // For download, we still need the video blob
-        // Try to fetch it in background for download
+        // Try to fetch video for download in background
         fetchVideoForDownload(videoId);
 
       } catch (err) {
@@ -818,7 +954,6 @@
     // Background fetch for download capability
     async function fetchVideoForDownload(videoId) {
       try {
-        // Try multiple proxies to get the actual video file
         const proxyUrls = [
           `https://api.vevioz.com/api/button/mp4/${videoId}`,
           `https://yt-api.com/api/button/mp4/${videoId}`
@@ -841,36 +976,88 @@
           }
         }
       } catch (e) {
-        console.log('Download fetch failed, download may not work');
+        console.log('Download fetch failed');
       }
     }
 
+    // ---------- SHARE VIDEO ----------
     function shareVideo() {
-      if (!currentVideoUrl) {
-        alert('No video loaded to share.');
+      if (!currentVideoId) {
+        showToast('⚠️ No video loaded to share');
         return;
       }
-      const videoId = extractVideoId(currentVideoUrl);
-      if (!videoId) {
-        alert('invalid video');
-        return;
-      }
-      const token = generateRandomString(8);
-      const shareLink = `https://watchthat.social/v/${videoId}?token=${token}&user=${currentUsername}`;
+      
+      // Generate a unique share token
+      const shareToken = generateRandomString(16);
+      
+      // Get base URL
+      const baseUrl = getBaseUrl();
+      
+      // Create the share link
+      const shareLink = `${baseUrl}/watchwithme/${shareToken}`;
+      
+      // Display in popup
+      shareLinkDisplay.textContent = shareLink;
+      sharePopup.classList.add('active');
+      
+      // Store the token with video ID
+      shareTokens[shareToken] = {
+        videoId: currentVideoId,
+        sharedBy: currentUsername,
+        timestamp: Date.now(),
+        videoUrl: currentVideoUrl
+      };
+      localStorage.setItem('watchthat_share_tokens', JSON.stringify(shareTokens));
+    }
+
+    // Copy share link
+    copyShareBtn.addEventListener('click', function() {
+      const link = shareLinkDisplay.textContent;
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareLink).then(() => {
-          alert('Share link copied!\n' + shareLink + '\n(share with 1 person)');
+        navigator.clipboard.writeText(link).then(() => {
+          this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+          showToast('✅ Link copied to clipboard!');
+          setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-copy"></i> Copy Link';
+          }, 2000);
         }).catch(() => {
-          prompt('Copy this share link:', shareLink);
+          selectAndCopy(link);
         });
       } else {
-        prompt('Copy this share link:', shareLink);
+        selectAndCopy(link);
       }
+    });
+
+    function selectAndCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      copyShareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      showToast('✅ Link copied to clipboard!');
+      setTimeout(() => {
+        copyShareBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Link';
+      }, 2000);
     }
 
+    // Close share popup
+    closeShareBtn.addEventListener('click', function() {
+      sharePopup.classList.remove('active');
+    });
+
+    // Close on click outside
+    sharePopup.addEventListener('click', function(e) {
+      if (e.target === this) {
+        sharePopup.classList.remove('active');
+      }
+    });
+
+    // ---------- DOWNLOAD VIDEO ----------
     function downloadVideo() {
       if (!videoBlobUrl) {
-        alert('No video available for download. Try loading a video first.');
+        showToast('⚠️ No video available for download');
         return;
       }
       const a = document.createElement('a');
@@ -879,8 +1066,10 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      showToast('✅ Download started!');
     }
 
+    // ---------- RESET VIDEO ----------
     function resetVideo() {
       if (videoBlobUrl) {
         URL.revokeObjectURL(videoBlobUrl);
@@ -896,8 +1085,10 @@
         paste a YouTube link & click Watch
       `;
       currentVideoUrl = '';
+      currentVideoId = '';
       videoStatus.textContent = 'no video loaded';
       youtubeLinkInput.value = '';
+      showToast('🔄 Video reset');
     }
 
     // ---------- THEME ----------
@@ -915,6 +1106,30 @@
       } else {
         darkModeToggle.checked = false;
         applyTheme('light-theme');
+      }
+    }
+
+    // ---------- CHECK FOR SHARED LINK ON LOAD ----------
+    function checkSharedLink() {
+      const path = window.location.pathname;
+      const match = path.match(/\/watchwithme\/([a-zA-Z0-9]+)/);
+      if (match) {
+        const token = match[1];
+        const shareData = shareTokens[token];
+        if (shareData && shareData.videoId) {
+          // Load the shared video
+          setTimeout(() => {
+            const videoId = shareData.videoId;
+            const proxyUrl = `https://yout-ube.com/watch?v=${videoId}`;
+            videoIframe.style.display = 'block';
+            videoPlaceholder.style.display = 'none';
+            videoIframe.src = proxyUrl;
+            currentVideoId = videoId;
+            currentVideoUrl = shareData.videoUrl || `https://www.youtube.com/watch?v=${videoId}`;
+            videoStatus.textContent = '✅ shared video loaded';
+            showToast('📹 Shared video loaded!');
+          }, 500);
+        }
       }
     }
 
@@ -938,6 +1153,8 @@
       mainApp.style.display = 'block';
       loadTheme();
       resetVideo();
+      // Check if there's a shared link
+      setTimeout(checkSharedLink, 100);
     });
 
     // ---------- MAIN APP EVENTS ----------
@@ -945,6 +1162,7 @@
       const link = youtubeLinkInput.value.trim();
       if (!link) {
         videoStatus.textContent = '⛔ enter a link';
+        showToast('⚠️ Please enter a YouTube link');
         return;
       }
       loadYouTubeVideo(link);
@@ -977,10 +1195,6 @@
       } else {
         applyTheme('light-theme');
       }
-    });
-
-    loopToggle.addEventListener('change', function() {
-      // Loop doesn't work with iframe, but we keep it for future
     });
 
     // ---------- INIT ----------
