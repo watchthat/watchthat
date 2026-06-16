@@ -85,9 +85,13 @@
         document.querySelectorAll('.username-option').forEach(el => el.classList.remove('selected'));
         this.classList.add('selected');
         selectedUsername = this.dataset.name;
+        // Show slider and enable it
         sliderContainer.classList.add('active');
         resetSlider();
+        // Re-initialize slider events
+        initSliderEvents();
         checkVerification();
+        showToast('✅ Username selected! Now slide to verify.');
       });
       usernameGrid.appendChild(div);
     });
@@ -112,6 +116,10 @@
 
   function onSliderStart(e) {
     if (isVerified) return;
+    if (!selectedUsername) {
+      showToast('⚠️ Please select a username first');
+      return;
+    }
     e.preventDefault();
     const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
     isDragging = true;
@@ -168,7 +176,7 @@
     verifyStatus.textContent = '✅ Verified!';
     verifyStatus.className = 'verify-status success';
     checkVerification();
-    showToast('✅ Verified!');
+    showToast('✅ Verification complete!');
   }
 
   function resetSlider() {
@@ -186,7 +194,8 @@
     enterAppBtn.classList.remove('active');
   }
 
-  function initSlider() {
+  function initSliderEvents() {
+    // Remove old listeners by cloning
     const newThumb = sliderThumb.cloneNode(true);
     sliderThumb.parentNode.replaceChild(newThumb, sliderThumb);
     const freshThumb = document.getElementById('sliderThumb');
@@ -358,21 +367,34 @@
 
   // ===== AUTH FLOW =====
   createAccountBtn.addEventListener('click', function() {
-    renderUsernames();
+    // Show username selection
     usernameSelection.style.display = 'block';
+    
+    // Render usernames if not already rendered
+    if (usernameGrid.children.length === 0) {
+      renderUsernames();
+    }
+    
+    // Show slider
+    sliderContainer.classList.add('active');
+    
+    // Reset verification state
     resetSlider();
-    setTimeout(() => {
-      if (!isVerified && selectedUsername) {
-        sliderContainer.classList.add('active');
-        initSlider();
-      }
-    }, 100);
+    
+    // Initialize slider events
+    initSliderEvents();
+    
+    // Scroll to show the slider
+    sliderContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    showToast('👤 Select a username, then slide to verify');
   });
 
   enterAppBtn.addEventListener('click', function() {
     if (!isVerified || !selectedUsername) {
-      verifyStatus.textContent = '⚠️ Verify & pick a username';
+      verifyStatus.textContent = '⚠️ Select a username and verify';
       verifyStatus.className = 'verify-status error';
+      showToast('⚠️ Please select a username and complete verification');
       return;
     }
     currentUsername = selectedUsername;
@@ -382,9 +404,10 @@
     loadTheme();
     loadAllSettings();
     resetVideo();
+    showToast('🎉 Welcome to WatchThat!');
   });
 
-  // ===== EVENTS =====
+  // ===== MAIN APP EVENTS =====
   loadVideoBtn.addEventListener('click', function() {
     const link = youtubeLinkInput.value.trim();
     if (!link) {
@@ -454,7 +477,13 @@
   });
 
   // ===== INIT =====
+  // Pre-render usernames but hide them
   renderUsernames();
   loadTheme();
+  
+  // Initialize slider events
+  setTimeout(() => {
+    initSliderEvents();
+  }, 100);
 
 })();
